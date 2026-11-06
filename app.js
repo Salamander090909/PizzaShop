@@ -2,8 +2,12 @@ const express = require("express");
 require("dotenv").config();
 const argon2 = require("argon2");
 const mongoose = require("mongoose");
-const Food = require("./models/Food")
-const User = require("./models/User")
+const Food = require("./models/Food");
+const User = require("./models/User");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser")
+const nodemailer = require("nodemailer");
+
 
 const app = express();
 
@@ -13,6 +17,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}))
 
 app.use(express.static("public"))
+app.use(cookieParser());
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -25,9 +30,38 @@ app.get("/", async (req, res) => {
 
 })
 
-app.get("/register-food", (req, res) => {
-    res.render("registerFood")
+app.get("/profile", (req, res) => {
+    res.render("profile")
 })
+
+app.get("/register-food", async (req, res) => {
+    
+    console.log(req.cookies)
+
+    const token = req.cookies.jwt;
+
+    const cookie = jwt.verify(token, process.env.SECRET_JWT);
+    console.log(cookie)
+    let userId = cookie.userId;
+    const user = await User.findById(userId);
+    console.log(user)
+
+    if(user.role !== "admin") {
+        res.redirect("/");
+    } else {
+        res.render("registerFood")
+    }
+
+})
+
+app.get("/forgotten-password", (req, res) => {
+    res.render("forgottenPassword");
+})
+
+app.get("/reset-password", (req, res) => {
+    res.render("resetPassword");
+})
+
 
 app.get("/login", (req, res) => {
     res.render("login")
@@ -35,6 +69,41 @@ app.get("/login", (req, res) => {
 
 app.get("/register-user", (req, res) => {
     res.render("registerUser")
+})
+
+app.post("/forgotten-password", async (req, res) => {
+    const {email} = req.body;
+
+    const user = await User.findOne({email});
+
+    console.log(user);
+    if(user) {
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            auth: {
+                user: 'dan55@ethereal.email',
+                pass: 'twfbw8CUkAyYvchAcz'
+            }
+        });
+
+        const jwtEmail = jwt.sign({email: user.email}, process.env.SECRET_JWT);
+
+        await transporter.sendMail({
+            from: "dan55@ethereal.email", 
+            to: "dan55@ethereal.email",
+            subject: "Glemt passord",
+            html: `<p>Her er din nye reset passord lenke</p>
+            <a href="http://localhost:4000/reset-password?email=${jwtEmail}">Trykk her</a>`
+        })
+    }
+})
+
+app.post("/reset-password", async (req, res) => {
+    const {password, repeatPassword} = req.body;
+
+    const url = req.query;
+    console.log("req.query", url)
 })
 
 app.post("/register-user", async (req, res) => {
@@ -96,10 +165,19 @@ app.post("/login", async (req, res) => {
         res.status(404).send("Bruker eksisterer ikke")
     }
 
-        let isPassword = argon2.verify(user.password, password);
+        let isPassword = await argon2.verify(user.password, password);
 
         if(isPassword) {
-            res.redirect("/register-food");
+            const token = jwt.sign({userId: user._id}, process.env.SECRET_JWT)
+            console.log("token", token);
+
+            res.cookie("jwt", token)
+
+            if(user.role == "admin") {
+                res.redirect("/register-food");
+            } else {
+                res.redirect("/profile")
+            }
         } else {
             res.send("email eller passord stemmer ikke overens")
         }
@@ -107,4 +185,6 @@ app.post("/login", async (req, res) => {
 
 
 
-app.listen(process.env.PORT);
+app.listen(process.env.PORT, () => {
+    console.log(`listening on http://localhost:${process.env.PORT}`)
+});
