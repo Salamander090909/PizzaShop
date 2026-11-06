@@ -1,0 +1,24 @@
+<%- include("./partials/head.ejs") %>
+
+<body>
+    <%- include("./partials/nav.ejs") %>
+    <h1>Register your food here</h1>
+    <p>This will show up on main page</p>
+
+    <form action="" method="post">
+        <label for="bildeurl">bildeurl</label>
+        <input type="text" name="bildeurl" id="bildeurl" placeholder="bildeurl">
+        <label for="tittel">tittel</label>
+        <input type="text" name="tittel" id="tittel" placeholder="tittel">
+        <label for="beskrivelse">beskrivelse</label>
+        <input type="text" name="beskrivelse" id="beskrivelse" placeholder="beskrivelse">
+        <label for="ingredienser">ingredienser</label>
+        <input type="text" name="ingredienser" id="ingredienser" placeholder="ingredienser">
+        <label for="kategori">kategori</label>
+        <input type="text" name="kategori" id="kategori" placeholder="kategori">
+        <label for="pris">pris</label>
+        <input type="number" name="pris" id="pris" placeholder="pris">
+        <button>Register food</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<%- include("./partials/head.ejs") %>
+<body>
+    <%- include("./partials/nav.ejs") %>
+
+    <div class="loginBox">
+        <h1>Register</h1>
+        <form action="" method="post">
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" placeholder="Email" required>
+
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" placeholder="Password" required>
+
+            <label for="repeatPassword">Repeat Password</label>
+            <input type="repeatPassword" name="repeatPassword" id="repeatPassword" placeholder="Repeat Password" required>
+
+            <button>Register</button>
+
+            <a href="/login">Logg Inn</a>
+
+        </form>
+    </div>
+</body>
